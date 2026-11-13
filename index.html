@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>퇴직 후 건보료 계산기</title>
+<meta name="description" content="퇴직 후 지역가입자 건강보험료와, 월 60시간 이상 일해서 직장가입자가 됐을 때 건보료를 비교합니다. 2026년 기준.">
+<style>
+:root{
+  --bg:#f6f1e7; --card:#fffdf8; --soft:#ede5d6; --ink:#1f2a24; --muted:#5f665f;
+  --brand:#1b4a36; --leaf:#5a9150; --warn:#a1501c; --line:#d9cfbc; --good:#1b6b43;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141a16; --card:#1c241f; --soft:#26302a; --ink:#ece7dc; --muted:#a8ada5;
+    --brand:#8fd0a8; --leaf:#8cc27f; --warn:#f0a36b; --line:#36423a; --good:#8fd0a8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141a16; --card:#1c241f; --soft:#26302a; --ink:#ece7dc; --muted:#a8ada5;
+  --brand:#8fd0a8; --leaf:#8cc27f; --warn:#f0a36b; --line:#36423a; --good:#8fd0a8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  font-size:19px;line-height:1.6;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:24px 16px 64px}
+header .brand{color:var(--brand);font-weight:800;letter-spacing:.02em;font-size:16px}
+h1{font-size:30px;line-height:1.3;margin:6px 0 8px;color:var(--brand)}
+.lede{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0}
+.card h2{font-size:21px;margin:0 0 12px;color:var(--brand)}
+.step{display:inline-block;background:var(--brand);color:var(--card);border-radius:999px;
+  width:30px;height:30px;text-align:center;line-height:30px;font-size:16px;margin-right:8px}
+label{display:block;font-weight:700;margin:14px 0 4px}
+.hint{display:block;font-weight:400;color:var(--muted);font-size:16px;margin-top:2px}
+.field{display:flex;align-items:center;gap:8px}
+input[type=number],select{width:100%;font:inherit;font-size:21px;padding:10px 12px;border-radius:10px;
+  border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+input:focus,select:focus{outline:none;border-color:var(--leaf)}
+.unit{white-space:nowrap;color:var(--muted);font-weight:700}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1 1 30%;font:inherit;font-size:18px;padding:10px;border-radius:10px;border:2px solid var(--line);
+  background:var(--bg);color:var(--ink);cursor:pointer;min-height:48px}
+.seg button[aria-pressed=true]{border-color:var(--brand);background:var(--brand);color:var(--card);font-weight:700}
+details{margin-top:12px}
+summary{cursor:pointer;color:var(--brand);font-weight:700;min-height:44px;display:flex;align-items:center}
+.result{border:2px solid var(--brand)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 4px}
+.box{background:var(--soft);border-radius:12px;padding:14px}
+.box .t{font-size:16px;color:var(--muted);font-weight:700}
+.box .v{font-size:30px;font-weight:800;line-height:1.2;margin-top:4px}
+.box .s{font-size:15px;color:var(--muted)}
+.big{background:var(--brand);color:var(--card);border-radius:12px;padding:16px;margin-top:12px;text-align:center}
+.big .v{font-size:34px;font-weight:800;line-height:1.25}
+.big .s{font-size:16px;opacity:.9}
+.note{border-left:4px solid var(--leaf);padding:8px 12px;margin:10px 0;background:var(--soft);border-radius:0 10px 10px 0;font-size:17px}
+.note.warn{border-left-color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px}
+td{padding:6px 4px;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.foot{font-size:15px;color:var(--muted)}
+nav{display:flex;gap:8px;margin:8px 0 12px;flex-wrap:wrap}
+nav a{flex:1 1 40%;text-align:center;padding:10px;border-radius:10px;border:2px solid var(--line);
+  color:var(--brand);text-decoration:none;font-weight:700;min-height:48px}
+nav a[aria-current=page]{background:var(--brand);border-color:var(--brand);color:var(--card)}
+.jobs-link{display:block;text-align:center;margin-top:12px;padding:12px;border-radius:10px;border:2px solid var(--brand);
+  color:var(--brand);font-weight:800;text-decoration:none;min-height:48px}
+.foot a{color:var(--brand)}
+@media (max-width:480px){
+  body{font-size:18px}
+  h1{font-size:26px}
+  .compare{grid-template-columns:1fr}
+  .box .v{font-size:28px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">연금랩 · PENSION LAB</div>
+  <nav>
+    <a href="index.html" aria-current="page">건보료 계산기</a>
+    <a href="jobs.html">일자리 보기</a>
+  </nav>
+  <h1>퇴직 후 건보료,<br>일하면 얼마나 줄까?</h1>
+  <p class="lede">지금 낼 지역 건보료와, 월 60시간 이상 일해서 회사 건강보험(직장가입자)으로 바뀌었을 때를 비교해요. 2026년 기준이고, 입력한 숫자는 이 화면 밖으로 나가지 않아요.</p>
+</header>
+
+<section class="card">
+  <h2><span class="step">1</span>나이</h2>
+  <div class="seg" id="age" role="group" aria-label="나이">
+    <button type="button" data-v="u60" aria-pressed="false">60세 미만</button>
+    <button type="button" data-v="60" aria-pressed="true">60~64세</button>
+    <button type="button" data-v="65" aria-pressed="false">65세 이상</button>
+  </div>
+  <p class="hint" style="margin-top:10px">건보료는 나이와 상관없이 소득과 재산으로만 정해져요. 나이에 따라 달라지는 건 일할 때 내는 국민연금(60세 미만)·고용보험(65세 미만)이라, 아래 실수령 효과와 회사 부담에만 반영돼요.</p>
+</section>
+
+<section class="card">
+  <h2><span class="step">2</span>지금 받는 돈</h2>
+  <label for="pension">국민연금·공무원·군인·교사 연금 (월)
+    <span class="hint">개인연금·퇴직연금(IRP)은 건보료에 안 들어가니 빼고 넣어요</span></label>
+  <div class="field"><input id="pension" type="number" inputmode="numeric" min="0" value="120"><span class="unit">만 원</span></div>
+
+  <details>
+    <summary>다른 소득이 있어요 (임대·사업·금융)</summary>
+    <label for="other">임대·사업소득 + 연 1천만 원 넘는 이자·배당 (1년 합계)
+      <span class="hint">이자·배당이 1년 1천만 원 이하면 0으로 두세요</span></label>
+    <div class="field"><input id="other" type="number" inputmode="numeric" min="0" value="0"><span class="unit">만 원/년</span></div>
+  </details>
+</section>
+
+<section class="card">
+  <h2><span class="step">3</span>집과 재산</h2>
+  <label for="gongsi">가진 집·땅의 공시가격 합계
+    <span class="hint">재산세 고지서나 부동산공시가격알리미에서 확인. 없으면 0</span></label>
+  <div class="field"><input id="gongsi" type="number" inputmode="numeric" min="0" value="50000"><span class="unit">만 원</span></div>
+  <details>
+    <summary>재산세 과세표준을 직접 알아요</summary>
+    <label for="taxbase">재산세 과세표준
+      <span class="hint">입력하면 위 공시가격 대신 이 값을 써요</span></label>
+    <div class="field"><input id="taxbase" type="number" inputmode="numeric" min="0" placeholder="비워두면 공시가격 × 60%"><span class="unit">만 원</span></div>
+  </details>
+  <details>
+    <summary>전세·월세로 살아요</summary>
+    <label for="deposit">보증금</label>
+    <div class="field"><input id="deposit" type="number" inputmode="numeric" min="0" value="0"><span class="unit">만 원</span></div>
+    <label for="rent">월세</label>
+    <div class="field"><input id="rent" type="number" inputmode="numeric" min="0" value="0"><span class="unit">만 원</span></div>
+  </details>
+</section>
+
+<section class="card">
+  <h2><span class="step">4</span>생각 중인 일자리</h2>
+  <label for="wage">월급 (세전)</label>
+  <div class="field"><input id="wage" type="number" inputmode="numeric" min="0" value="150"><span class="unit">만 원</span></div>
+  <label for="hours">한 달 근무시간
+    <span class="hint">주 15시간 × 4주 ≈ 60시간. 60시간 이상이어야 회사 건강보험이 돼요</span></label>
+  <div class="field"><input id="hours" type="number" inputmode="numeric" min="0" value="100"><span class="unit">시간</span></div>
+</section>
+
+<section class="card result" id="result" aria-live="polite">
+  <h2>결과: 한 달 건보료</h2>
+  <div class="compare">
+    <div class="box"><div class="t">일 안 할 때 (지역가입자)</div><div class="v" id="rLocal">-</div><div class="s" id="rLocalSub"></div></div>
+    <div class="box"><div class="t">일할 때 (내가 내는 몫)</div><div class="v" id="rWork">-</div><div class="s" id="rWorkSub"></div></div>
+  </div>
+  <div class="big"><div class="s" id="bigLabel">건보료 차이</div><div class="v" id="rDiff">-</div><div class="s" id="rNet"></div></div>
+  <div id="notes"></div>
+  <details>
+    <summary>계산 자세히 보기</summary>
+    <table id="detail"></table>
+  </details>
+  <a class="jobs-link" href="jobs.html">회사 건강보험 되는 일자리 보기 →</a>
+</section>
+
+<section class="card">
+  <h2>이런 방법도 같이 비교해 보세요</h2>
+  <div id="alts"></div>
+</section>
+
+<section class="card">
+  <h2>회사 입장에서는?</h2>
+  <p style="margin:0 0 8px">직장가입자가 되면 회사도 건보료 절반과 4대보험을 내요. 시니어를 뽑는 회사는 지원금으로 이 부담을 덜 수 있어요.</p>
+  <table id="employer"></table>
+  <p class="foot">지원금은 취업규칙(정년 연장·폐지·재고용 규정) 등 조건을 갖춰야 받을 수 있어요. 금액·요건은 해마다 바뀌니 관할 고용센터에 확인하세요.</p>
+</section>
+
+<footer class="foot">
+  <p><b>참고용 추정치예요.</b> 실제 고지액은 국민건강보험공단(1577-1000), 국민연금공단(1355)에서 확인하세요. 소득세는 계산에 넣지 않았어요.</p>
+  <p>기준: 건강보험료율 7.19%, 재산 점수당 211.5원, 장기요양 13.14%(건보료 대비), 재산 기본공제 1억 원, 재산 점수표(국민건강보험법 시행령 별표4), 지역가입자 연금·근로소득 50% 반영, 국민연금 재직자 감액 기준 A값+200만 원(2026년 약 519만 원). 2026년 11월 확인.</p>
+</footer>
+</div>
+
+<script>
+(function(){
+  // 2026 기준값
+  var RATE = 0.0719, POINT = 211.5, LTC = 0.1314, PROP_DEDUCT = 10000, MIN_PREM = 20160;
+  var NPS_REDUCE_LINE = 519; // 만원, A값+200만 (근로소득공제 후 소득 기준)
+  var NPS_EMP = 0.0475, EI_EMP = 0.009;
+  // 시행령 별표4 재산등급 (상한 만원, 점수)
+  var GRADES = [[450,22],[900,44],[1350,66],[1800,97],[2250,122],[2700,146],[3150,171],[3600,195],[4050,219],[4500,244],
+    [5020,268],[5590,294],[6220,320],[6930,344],[7710,365],[8590,386],[9570,412],[10700,439],[11900,465],[13300,490],
+    [14800,516],[16400,535],[18300,559],[20400,586],[22700,611],[25300,637],[28100,659],[31300,681],[34900,706],[38800,731],
+    [43200,757],[48100,785],[53600,812],[59700,841],[66500,881],[74000,921],[82400,961],[91800,1001],[103000,1041],[114000,1091],
+    [127000,1141],[142000,1191],[158000,1241],[176000,1291],[196000,1341],[218000,1391],[242000,1451],[270000,1511],[300000,1571],[330000,1641],
+    [363000,1711],[399300,1781],[439230,1851],[483153,1921],[531468,1991],[584615,2061],[643077,2131],[707385,2201],[778124,2271],[Infinity,2341]];
+
+  var age = "60";
+  var $ = function(id){return document.getElementById(id)};
+  var num = function(id){var v = parseFloat($(id).value); return isFinite(v) && v > 0 ? v : 0};
+
+  function propScore(manwon){
+    if (manwon <= 0) return 0;
+    for (var i=0;i<GRADES.length;i++) if (manwon <= GRADES[i][0]) return GRADES[i][1];
+    return 2341;
+  }
+  // 원 → "약 19만 원" (만 원 단위 어림)
+  function man(won){
+    if (won <= 0) return "0원";
+    if (won < 10000) return "약 " + (Math.round(won/1000)*1000).toLocaleString("ko-KR") + "원";
+    return "약 " + Math.round(won/10000).toLocaleString("ko-KR") + "만 원";
+  }
+  function won(w){ return Math.round(w).toLocaleString("ko-KR") + "원"; }
+
+  function calc(){
+    var pension = num("pension"), other = num("other"), gongsi = num("gongsi");
+    var taxbaseIn = $("taxbase").value.trim();
+    var taxbase = taxbaseIn !== "" ? num("taxbase") : gongsi * 0.6;
+    var deposit = num("deposit"), rent = num("rent");
+    var wage = num("wage"), hours = num("hours");
+    var covered = hours >= 60 && wage > 0;
+
+    // 지역가입자 (일 안 할 때)
+    var rentEval = (deposit + rent * 40) * 0.3;
+    var propBase = Math.max(0, taxbase + rentEval - PROP_DEDUCT);
+    var score = propScore(propBase);
+    var propPrem = Math.floor(score * POINT / 10) * 10;
+    function localPrem(extraWageAnnual){
+      var incMonthly = (pension * 12 * 0.5 + other + extraWageAnnual * 0.5) * 10000 / 12;
+      var incPrem = Math.floor(incMonthly * RATE / 10) * 10;
+      var h = Math.max(MIN_PREM, incPrem + propPrem);
+      return {inc: incPrem, prop: propPrem, health: h, ltc: Math.floor(h * LTC / 10) * 10, total: h + Math.floor(h * LTC / 10) * 10};
+    }
+    var L = localPrem(0);
+
+    // 일할 때
+    var W, workLabel;
+    if (covered){
+      var hEmp = Math.floor(wage * 10000 * RATE / 2 / 10) * 10;
+      var ltcEmp = Math.floor(hEmp * LTC / 10) * 10;
+      var nonWage = pension * 12 + other; // 만원/년
+      var extra = 0;
+      if (nonWage > 2000){
+        var evalRatio = (pension * 12 * 0.5 + other) / nonWage;
+        extra = Math.floor((nonWage - 2000) * evalRatio * 10000 / 12 * RATE / 10) * 10;
+        extra += Math.floor(extra * LTC / 10) * 10;
+      }
+      W = {health: hEmp, ltc: ltcEmp, extra: extra, total: hEmp + ltcEmp + extra};
+      workLabel = "회사가 같은 금액을 함께 내요";
+    } else {
+      var L2 = localPrem(wage * 12);
+      W = {health: L2.health, ltc: L2.ltc, extra: 0, total: L2.total, local: true};
+      workLabel = wage > 0 ? "60시간 미만이라 지역가입자 그대로" : "";
+    }
+
+    var diff = L.total - W.total;
+    var npsPay = (covered && age === "u60") ? Math.floor(wage * 10000 * NPS_EMP / 10) * 10 : 0;
+    var eiPay = (covered && age !== "65") ? Math.floor(wage * 10000 * EI_EMP / 10) * 10 : 0;
+    var netMonthly = wage * 10000 - W.total - npsPay - eiPay + L.total;
+
+    $("rLocal").textContent = man(L.total);
+    $("rLocalSub").textContent = "소득분 " + man(L.inc) + " + 재산분 " + man(L.prop) + " + 장기요양";
+    $("rWork").textContent = wage > 0 ? man(W.total) : "-";
+    $("rWorkSub").textContent = workLabel;
+    if (diff > 0){
+      $("bigLabel").textContent = "일하면 건보료가 매달";
+      $("rDiff").textContent = man(diff) + " 줄어요";
+    } else if (diff < 0){
+      $("bigLabel").textContent = "일하면 건보료가 매달";
+      $("rDiff").textContent = man(-diff) + " 늘어요";
+    } else {
+      $("bigLabel").textContent = "건보료 차이";
+      $("rDiff").textContent = "거의 없어요";
+    }
+    $("rNet").textContent = wage > 0
+      ? "월급에서 내 보험료를 빼고 아낀 지역 건보료를 더하면 매달 " + man(netMonthly) + " (세금 제외)"
+      : "";
+
+    // 안내
+    var notes = [];
+    if (wage > 0 && !covered) notes.push(["warn", "한 달 60시간 미만이면 회사 건강보험이 안 돼요. 오히려 월급의 절반이 지역 건보료 소득에 더해져요."]);
+    if (covered && W.extra > 0) notes.push(["warn", "월급 말고 다른 소득(연금 등)이 1년 2천만 원을 넘어서, 넘는 부분에 건보료가 " + man(W.extra) + " 더 붙어요."]);
+    if (pension > 0 && wage >= NPS_REDUCE_LINE) notes.push(["warn", "월급이 많아 국민연금이 깎일 수 있어요. 2026년에는 근로소득공제 뒤 월 약 519만 원까지 감액이 없어요. 국민연금공단(1355)에서 확인하세요."]);
+    else if (pension > 0 && wage > 0) notes.push(["", "국민연금이라면 이 월급으로 깎이지 않아요. 2026년 기준 월 약 519만 원(근로소득공제 뒤)까지 감액이 없어요. 공무원·군인·교사 연금은 기준이 달라 각 공단에 확인하세요."]);
+    if (covered && age === "u60") notes.push(["", "60세 미만이라 국민연금 보험료(월급의 4.75%)도 내요. 대신 나중에 받을 연금이 늘어요."]);
+    if (L.health === MIN_PREM) notes.push(["", "지금 건보료가 최저 수준이라 일해도 줄 여지가 적어요."]);
+    $("notes").innerHTML = notes.map(function(n){return '<div class="note ' + n[0] + '">' + n[1] + '</div>'}).join("");
+
+    // 자세히
+    var rows = [
+      ["재산세 과세표준" + (taxbaseIn === "" ? " (공시가격 × 60%)" : ""), won(taxbase * 10000)],
+      ["전월세 환산 ((보증금 + 월세×40) × 30%)", won(rentEval * 10000)],
+      ["기본공제 뒤 재산", won(propBase * 10000)],
+      ["재산 점수 × 211.5원", score + "점 → " + won(L.prop)],
+      ["소득분 (공적연금·근로 50%, 그 밖 100% 반영 × 7.19%)", won(L.inc)],
+      ["지역 건보료 + 장기요양", won(L.health) + " + " + won(L.ltc)]
+    ];
+    if (covered){
+      rows.push(["직장 건보료 (월급 × 7.19% ÷ 2)", won(W.health)]);
+      rows.push(["직장 장기요양 (건보료 × 13.14%)", won(W.ltc)]);
+      if (W.extra) rows.push(["보수 외 소득 추가 건보료", won(W.extra)]);
+      if (npsPay) rows.push(["국민연금 본인 몫 (4.75%)", won(npsPay)]);
+      if (eiPay) rows.push(["고용보험 본인 몫 (0.9%)", won(eiPay)]);
+    } else if (wage > 0){
+      rows.push(["근무 후 지역 건보료 + 장기요양", won(W.health) + " + " + won(W.ltc)]);
+    }
+    $("detail").innerHTML = rows.map(function(r){return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"}).join("");
+
+    // 대안 (한쪽만 권하지 않기)
+    var alts = [];
+    var depIncome = pension * 12 + other;
+    var depOk = other === 0 && depIncome <= 2000 && (taxbase <= 54000 || (taxbase <= 90000 && depIncome <= 1000));
+    alts.push('<div class="note"><b>자녀 회사 건강보험 피부양자</b> — ' + (depOk
+      ? "입력한 숫자로는 조건(연소득 2천만 원 이하, 재산 과표 5.4억 원 이하 등)에 들어갈 가능성이 있어요. 그러면 건보료가 0원이라, 일하지 않아도 돼요."
+      : "연소득 2천만 원 이하, 재산 과표 5.4억 원 이하(9억 원 이하면 소득 1천만 원 이하) 같은 조건이 있어요. 입력한 숫자로는 어려워 보여요.") + '</div>');
+    alts.push('<div class="note"><b>임의계속가입</b> — 퇴직 전 회사에서 1년 넘게 직장가입자였다면, 퇴직 후 최대 36개월 동안 예전 직장 때 내던 본인 몫 수준으로 낼 수 있어요. 퇴직 뒤 첫 지역 건보료 고지서의 납부기한에서 2개월이 지나기 전에 신청해야 해요.</div>');
+    alts.push('<div class="note"><b>일하는 것 자체의 비용</b> — 출퇴근 시간·교통비, 건강, 가족 돌봄도 함께 따져 보세요. 건보료만 보고 정하면 손해일 수 있어요.</div>');
+    $("alts").innerHTML = alts.join("");
+
+    // 회사 쪽
+    if (covered){
+      var cH = W.health + W.ltc;
+      var cN = age === "u60" ? Math.floor(wage * 10000 * NPS_EMP / 10) * 10 : 0;
+      var cE = Math.floor(wage * 10000 * (age === "65" ? 0.0025 : 0.0115) / 10) * 10;
+      var cI = Math.floor(wage * 10000 * 0.007 / 10) * 10;
+      var cTot = cH + cN + cE + cI;
+      $("employer").innerHTML = [
+        ["건강보험 + 장기요양 (회사 몫)", won(cH)],
+        ["국민연금 (회사 몫, 60세 미만만)", won(cN)],
+        ["고용보험 (회사 몫, 규모마다 다름)", won(cE)],
+        ["산재보험 (업종 평균 약 0.7%)", won(cI)],
+        ["회사 부담 합계 (월)", "<b>" + man(cTot) + "</b>"]
+      ].concat(age === "u60" ? [] : [["참고: 고령자 계속고용장려금", "월 30만 원(수도권)~40만 원(비수도권), 최대 3년"]]).map(function(r){return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"}).join("");
+    } else {
+      $("employer").innerHTML = "<tr><td>한 달 60시간 이상 일자리를 넣으면 회사 부담을 보여드려요.</td><td></td></tr>";
+    }
+  }
+
+  // 내 입력은 이 브라우저에만 저장 (일자리 목록 갔다 와도 유지)
+  var KEEP = ["pension", "other", "gongsi", "taxbase", "deposit", "rent", "wage", "hours"], STORE = "pensionlab-calc-v1";
+  function save(){
+    try {
+      var s = {age: age}; KEEP.forEach(function(k){ s[k] = $(k).value; });
+      localStorage.setItem(STORE, JSON.stringify(s));
+    } catch (e) {}
+  }
+  function setAge(v){
+    age = v;
+    document.querySelectorAll("#age button").forEach(function(x){x.setAttribute("aria-pressed", x.dataset.v === v ? "true" : "false")});
+  }
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORE) || "null");
+    if (saved){ KEEP.forEach(function(k){ if (saved[k] != null) $(k).value = saved[k]; }); if (saved.age) setAge(saved.age); }
+  } catch (e) {}
+  // 일자리 목록에서 넘어온 월급 (?wage=만원)
+  var qWage = parseFloat(new URLSearchParams(location.search).get("wage"));
+  if (isFinite(qWage) && qWage > 0){ $("wage").value = Math.round(qWage); if (num("hours") < 60) $("hours").value = 100; }
+
+  document.querySelectorAll("#age button").forEach(function(b){
+    b.addEventListener("click", function(){ setAge(b.dataset.v); calc(); save(); });
+  });
+  document.querySelectorAll("input").forEach(function(i){ i.addEventListener("input", function(){ calc(); save(); }); });
+  calc();
+})();
+</script>
+</body>
+</html>
